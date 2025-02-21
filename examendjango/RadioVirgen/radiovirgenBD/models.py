@@ -1,4 +1,6 @@
 from django.db import models
+from numpy.ma.extras import unique
+
 
 # Create your models here.
 
@@ -42,8 +44,48 @@ class Usuario(models.Model):
     podcast_pendientes = models.ManyToManyField(Podcast, related_name="podcast_pendientes", blank=True)
     podcast_likes = models.ManyToManyField(Podcast, related_name="usu_podcast_like", blank=True)
     programas_likes = models.ManyToManyField(Programa, related_name="usu_programas_like", blank=True)
+    metodo_por_defecto = models.CharField(max_length=50, blank=True)
     def __str__(self):
         return f"{self.nombre} - {self.apellido}"
+
+
+class PagoTarjeta(models.Model):
+    num_tarjeta = models.IntegerField()
+    cvc = models.IntegerField()
+    nombreTitular = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ("num_tarjeta","cvc","nombreTitular")
+
+    def __str__(self):
+        return f'{self.nombreTitular}: {self.num_tarjeta}'
+
+class PayPal(models.Model):
+    correo_usuario = models.CharField(max_length=50, unique=True)
+    def __str__(self):
+        return str(self.correo_usuario)
+
+class Transferencia(models.Model):
+    num_cuenta = models.IntegerField()
+    nombreTitular = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ("num_cuenta","nombreTitular")
+
+    def __str__(self):
+        return f'{self.nombreTitular}: {self.num_cuenta}'
+
+class MetodoPago(models.Model):
+    pago_tarjeta = models.ForeignKey(PagoTarjeta,on_delete=models.CASCADE, blank=True,null=True)
+    paypal = models.ForeignKey(PayPal,on_delete=models.CASCADE, blank=True,null=True)
+    transferencia = models.ForeignKey(Transferencia,on_delete=models.CASCADE, blank=True,null=True)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ("usuario","transferencia","paypal","pago_tarjeta")
+
+    def __str__(self):
+        return str(self.usuario)
 
 
 
